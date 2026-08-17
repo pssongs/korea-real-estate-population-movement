@@ -1,5 +1,5 @@
 import requests, time, logging
-from src.config import (
+from .config import (
     POP_FLOW_BASE_URL,
     SERVICE_KEY,
     POP_FLOW_COLUMNS,
@@ -126,7 +126,15 @@ def get_population_flow(districts, start_date, end_date):
 
                     if attempt < max_retries - 1:
                         time.sleep(2)
+                except requests.exceptions.HTTPError as e:
+                    if response.status_code == 503:
+                        logger.warning(
+                            f"API unavailable (503): {origin} -> {destination} "
+                            f"(attempt {attempt + 1}/{max_retries})"
+                        )
 
+                        if attempt < max_retries - 1:
+                            time.sleep(5)
             else:
                 logger.error(
                     f"Failed after {max_retries} attempts: "
@@ -184,10 +192,19 @@ def main():
    with engine.begin() as conn:
        conn.execute(text(create_table_query))
 
-   for start,end in date_batches[6:8]:
+   for start,end in date_batches[-2:]:
+
+      start_time = time.time()
+
       logger.info(f"Starting batch: {start} -> {end}")
 
-      result = get_population_flow(districts,start,end)
+      result = get_population_flow(
+          districts,
+          start,
+          end)
+
+      extraction_time = time.time() - start_time
+      load_start_time = time.time()
       for attempt in range(3):
          try: 
             with engine.begin() as conn:
@@ -200,8 +217,14 @@ def main():
       else:
          logger.error(f"Failed to load batch {start} -> {end} after 3 attempts")
          raise RuntimeError()
-
-      logger.info(f"Completed batch: {start} -> {end}")
+      elapsed = time.time() - start_time  
+      load_time = time.time() - load_start_time
+      logger.info(
+          f"Completed batch: {start} -> {end}"
+          f"Extraction: {extraction_time:.2f} seconds"
+          f"Database Load: {load_time:.2f} seconds"
+          f"Total: {elapsed:.2f} seconds"
+          )
 
 if __name__ == "__main__":
     main()

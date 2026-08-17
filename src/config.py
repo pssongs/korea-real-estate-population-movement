@@ -6,7 +6,7 @@ load_dotenv(override=True)
 DB_URL = os.getenv('DB_URL')
 
 START_DATE = 202301
-END_DATE = 202512
+END_DATE = 202606
 BATCH_MONTHS = 3
 
 SERVICE_KEY=os.getenv('POP_FLOW_SERVICE_KEY')
