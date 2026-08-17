@@ -2,8 +2,8 @@ import pandas as pd
 import requests, time, logging
 import xml.etree.ElementTree as ET
 from sqlalchemy import text, create_engine
-from config import SERVICE_KEY, APT_SALES_BASE_URL, APT_SALES_COLUMNS, END_DATE, DB_URL
-from seoul_population_flow_etl  import read_sql_file
+from src.config import SERVICE_KEY, APT_SALES_BASE_URL, APT_SALES_COLUMNS, END_DATE, DB_URL
+from src.seoul_population_flow_etl  import read_sql_file
 
 logging.basicConfig(
     level=logging.INFO,

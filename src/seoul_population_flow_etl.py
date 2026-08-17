@@ -1,5 +1,5 @@
 import requests, time, logging
-from config import (
+from src.config import (
     POP_FLOW_BASE_URL,
     SERVICE_KEY,
     POP_FLOW_COLUMNS,
@@ -138,9 +138,9 @@ def get_population_flow(districts, start_date, end_date):
     return pd.concat(dfs, ignore_index=True)
 
 # Splits the date range into 3 month batches
-def generate_date_batches():
-    current = pd.to_datetime(START_DATE, format='%Y%m')
-    end = pd.to_datetime(END_DATE, format='%Y%m')
+def generate_date_batches(start_date,end_date):
+    current = pd.to_datetime(start_date, format='%Y%m')
+    end = pd.to_datetime(end_date, format='%Y%m')
 
     date_batches = []
 
@@ -175,7 +175,7 @@ def load_seoul_population_flow(conn, df):
       logger.info(f"{min(i + batch_size,len(records))}/{len(records)} inserted")
 
 def main():
-   date_batches = generate_date_batches()
+   date_batches = generate_date_batches(START_DATE,END_DATE)
    districts = read_districts_csv()
    engine = create_db_engine()
 

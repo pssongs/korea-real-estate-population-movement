@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy import text, create_engine
-from config import DB_URL
-from seoul_population_flow_etl import read_sql_file
+from src.config import DB_URL
+from src.seoul_population_flow_etl import read_sql_file
 import logging
 
 logging.basicConfig(
