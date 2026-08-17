@@ -13,9 +13,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Returns a dict mapping district name to the first 5 numbers of respective code
-def read_district_code_five_csv():
-    df = pd.read_csv('/workspaces/korea-real-estate-population-movement/data/seoul_district_codes.csv')
-
+def read_district_code_five(df):
     required = {"District","Code"}
 
     if not required.issubset(df.columns):
@@ -59,9 +57,42 @@ def convert_date_column(df):
 
     return df.drop(columns=["dealYear","dealMonth"])
 
-def main():
+def fetch_response(param, current_date, district):
     max_retries = 3
-    district_info = read_district_code_five_csv()
+
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(
+                APT_SALES_BASE_URL,
+                params=param,
+                timeout=30)
+            response.raise_for_status()
+
+            root = ET.fromstring(response.text)
+
+            total_rows = int(root.findtext('.//totalCount', default='0'))
+
+            return root, total_rows
+
+
+        except requests.exceptions.ReadTimeout:
+            logger.warning(
+                f"Timeout: {current_date} info of {district} "
+                f"(attempt {attempt + 1}/{max_retries})"
+            )
+
+            if attempt < max_retries - 1:
+                time.sleep(2)
+    else:
+        logger.error(
+            f"Failed to fetch {current_date} info of {district} "
+            f"after {max_retries} attempts."
+        )
+        raise RuntimeError()
+
+def main():
+    district_info_df = pd.read_csv('/workspaces/korea-real-estate-population-movement/data/seoul_district_codes.csv')
+    district_info = read_district_code_five(district_info_df)
 
     engine = create_engine(DB_URL,
                            pool_pre_ping=True)
@@ -86,64 +117,18 @@ def main():
             'pageNo':1 
             }
 
-            for attempt in range(max_retries):
-                try:
-                    response = requests.get(
-                        APT_SALES_BASE_URL,
-                        params=param,
-                        timeout=30)
-                    response.raise_for_status()
+            root, total_rows = fetch_response(param,current_date,district)
 
-                    root = ET.fromstring(response.text)
+            if total_rows > 300:
+                param["numOfRows"] = total_rows
 
-                    total_rows = int(root.findtext('.//totalCount', default='0'))
+                root, _ = fetch_response(param,current_date,district)
 
-                    # If the total count of rows for district exceeds 300, attempting with the totalCount
-                    if total_rows > 300:
-                        logger.info(f'attempt {attempt+1}: Total_rows exceeds 200: attempting again...'
-                              f'numOfRows has been set to {total_rows}')
+            df = rename_df(
+                return_df(root)
+            )
 
-                        param = {
-                        'LAWD_CD':district_info[district],
-                        'DEAL_YMD':date,
-                        'serviceKey': SERVICE_KEY,
-                        'numOfRows':total_rows,
-                        'pageNo':1 
-                        }
-
-                        response = requests.get(
-                            APT_SALES_BASE_URL,
-                            params=param,
-                            timeout=30)
-                        response.raise_for_status()
-
-                        root = ET.fromstring(response.text)
-
-                    df = rename_df(
-                        convert_date_column(
-                            return_df(root)
-                        )
-                    )
-
-                    logger.info(f"fetched {district} info")
-
-                    data.append(df)
-                    break
-
-                except requests.exceptions.ReadTimeout:
-                    logger.warning(
-                        f"Timeout: {current_date} info of {district} "
-                        f"(attempt {attempt + 1}/{max_retries})"
-                    )
-
-                    if attempt < max_retries - 1:
-                        time.sleep(2)
-            else:
-                logger.error(
-                    f"Failed to fetch {current_date} info of {district} "
-                    f"after {max_retries} attempts."
-                )
-                raise RuntimeError()
+            data.append(df)
 
         result = pd.concat(data, ignore_index=True).to_dict(orient="records")
         insert_individual_apt_sales_sql = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/insert_individual_apt_sales.sql')
