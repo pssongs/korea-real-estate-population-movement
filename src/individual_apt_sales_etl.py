@@ -131,7 +131,7 @@ def main():
             data.append(df)
 
         result = pd.concat(data, ignore_index=True).to_dict(orient="records")
-        insert_individual_apt_sales_sql = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/insert_individual_apt_sales.sql')
+        insert_individual_apt_sales_sql = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/etl/insert_individual_apt_sales.sql')
 
         with engine.begin() as conn:
             logger.info(f"Inserting {current_date} data into DB...")

@@ -39,8 +39,8 @@ def main():
     engine = create_engine(DB_URL)
     records = get_apartment_sales_records()
 
-    create_apartment_sales_table_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/create_apartment_sales_table.sql')
-    insert_apartment_sales_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/insert_apartment_sales.sql')
+    create_apartment_sales_table_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/etl/create_apartment_sales_table.sql')
+    insert_apartment_sales_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/etl/insert_apartment_sales.sql')
 
     with engine.begin() as conn:
         logger.info("Creating apartment sales table and inserting records")

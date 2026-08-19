@@ -10,11 +10,11 @@ This project extracts Korean real estate transaction and population movement dat
 - Population movement between Seoul districts
 - Individual apartment sale records in Seoul
 - Seoul apartment transaction data
-    - Jeonsae (전세)
-    - Wolsae (월세)
 - District Information
 
 With this data, we will explore the correlation between population movement, apartment sales, and apartment prices across Seoul, and identify districts with significant trends. 
+
+Future analysis will expand the project to include jeonse (전세) and wolsae (월세) housing data to investigate broader housing market trends.
 
 ### Pipeline
 
@@ -37,7 +37,7 @@ Government APIs / CSV
 korea-real-estate-population-movement/
 │
 ├── data/
-├── development_lab/
+├── notebook/
 ├── sql/
 ├── src/
 ├── tests/
@@ -48,8 +48,9 @@ src/        ETL pipeline code
 tests/      pytest tests
 sql/        SQL schema and insert statements
 data/       supporting data such as district codes
-development_lab/  experimentation and analysis
+notebook/  experimentation and analysis
 ```
+
 ### Technologies Used
 - Python
 - Pandas
@@ -78,7 +79,7 @@ Variables in my .env file:
 
 ## Running the Pipeline
 With your workspace in the korea-real-estate-population-movement:
-```text
+```bash
 python 'src/seoul_population_flow_etl.py'
 python 'src/individual_apt_sales_etl.py'
 ```

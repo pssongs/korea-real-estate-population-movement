@@ -26,8 +26,8 @@ def main():
     engine = create_engine(DB_URL)
     records = get_district_codes_records()
 
-    create_district_codes_table_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/create_district_code_dim_table.sql')
-    insert_district_codes_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/insert_district_code.sql')
+    create_district_codes_table_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/etl/create_district_code_dim_table.sql')
+    insert_district_codes_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/etl/insert_district_code.sql')
 
     with engine.begin() as conn:
         logger.info("Creating district codes table and inserting records")

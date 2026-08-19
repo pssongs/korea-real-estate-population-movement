@@ -173,7 +173,7 @@ def load_seoul_population_flow(conn, df):
     records = df.to_dict(orient='records')
     batch_size = 100
 
-    insert_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/insert_seoul_population_flow.sql')
+    insert_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/etl/insert_seoul_population_flow.sql')
 
     # Loads records in batches due to load management
     for i in range(0,len(records),batch_size):
@@ -187,7 +187,7 @@ def main():
    districts = read_districts_csv()
    engine = create_db_engine()
 
-   create_table_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/create_seoul_population_flow_table.sql')
+   create_table_query = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/etl/create_seoul_population_flow_table.sql')
 
    with engine.begin() as conn:
        conn.execute(text(create_table_query))
