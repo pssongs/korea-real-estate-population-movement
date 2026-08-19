@@ -1,5 +1,5 @@
 import requests, time, logging
-from .config import (
+from config import (
     POP_FLOW_BASE_URL,
     SERVICE_KEY,
     POP_FLOW_COLUMNS,
