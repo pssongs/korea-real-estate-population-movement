@@ -3,11 +3,15 @@ INSERT INTO individual_apt_sales (
     build_year,
     deal_date,
     floor,
-    district_code
+    district_code,
+    price_manwon,
+    size_m2
 ) VALUES (
     :apt_name,
     :build_year,
     :deal_date,
     :floor,
-    :district_code
-) ON CONFLICT DO NOTHING
+    :district_code,
+    :price_manwon,
+    :size_m2
+) 
