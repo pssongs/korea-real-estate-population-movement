@@ -1,6 +1,15 @@
 SELECT
   d.district,
   i.deal_date::INT AS date,
+  ROUND(
+    SUM(price_manwon)/SUM(size_m2)
+    ,2) AS avg_price_m2,
+  ROUND(
+    AVG(EXTRACT(YEAR FROM CURRENT_DATE)::INT - build_year)
+    ,2) AS avg_build_age,
+  ROUND(
+    AVG(floor)
+  ,2) AS avg_floor,
   COUNT(*) AS transactions
 FROM individual_apt_sales i
 LEFT JOIN district_code_dim d
