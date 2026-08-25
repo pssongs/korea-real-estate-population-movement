@@ -2,8 +2,8 @@ import pandas as pd
 import requests, time, logging
 import xml.etree.ElementTree as ET
 from sqlalchemy import text, create_engine
-from src.config import SERVICE_KEY, APT_SALES_BASE_URL, APT_SALES_COLUMNS, END_DATE, DB_URL
-from src.seoul_population_flow_etl  import read_sql_file
+from config import SERVICE_KEY, APT_SALES_BASE_URL, APT_SALES_COLUMNS, END_DATE, DB_URL
+from seoul_population_flow_etl  import read_sql_file
 
 logging.basicConfig(
     level=logging.INFO,
@@ -45,7 +45,11 @@ def rename_df(df):
     return df.rename(columns={
         "aptNm":"apt_name",
         "sggCd":"district_code",
-        "buildYear":"build_year"
+        "buildYear":"build_year",
+        'excluUseAr':'size_m2',
+        'dealAmount':'price_manwon',
+        'jibun':'unit',
+        'umdNm':'dong'
     })
 
 # Creates 6 digit date column yyyymm
@@ -56,6 +60,10 @@ def convert_date_column(df):
     )
 
     return df.drop(columns=["dealYear","dealMonth"])
+
+def clean(df):
+    df['dealAmount'] = df['dealAmount'].str.replace(',','',regex=False).astype(int)
+    return df
 
 def fetch_response(param, current_date, district):
     max_retries = 3
@@ -97,9 +105,21 @@ def main():
     engine = create_engine(DB_URL,
                            pool_pre_ping=True)
 
-    create_individual_apt_sales_table_sql = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/create_individual_apt_sales_table.sql')
+    create_individual_apt_sales_table_sql = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/etl/create_individual_apt_sales_table.sql')
     with engine.begin() as conn:
         conn.execute(text(create_individual_apt_sales_table_sql))
+
+    cols = [
+        'apt_name',
+        'build_year',
+        'deal_date',
+        'floor',
+        'district_code',
+        'price_manwon',
+        'size_m2',
+        'unit',
+        'dong'
+    ]
 
     current_date = pd.to_datetime('202303',format='%Y%m')
     end_date = pd.to_datetime(END_DATE,format='%Y%m')
@@ -124,13 +144,24 @@ def main():
 
                 root, _ = fetch_response(param,current_date,district)
 
-            df = rename_df(
-                return_df(root)
-            )
+            df = convert_date_column(
+                    rename_df(
+                        clean(
+                            return_df(
+                                root
+                            )
+                        )
+                    )
+                )
 
             data.append(df)
+        
+        result = pd.concat(data, ignore_index=True)
 
-        result = pd.concat(data, ignore_index=True).to_dict(orient="records")
+        result = result.drop_duplicates(subset=cols)
+
+        result = result.to_dict(orient="records")
+        
         insert_individual_apt_sales_sql = read_sql_file('/workspaces/korea-real-estate-population-movement/sql/etl/insert_individual_apt_sales.sql')
 
         with engine.begin() as conn:
@@ -142,4 +173,5 @@ def main():
         current_date += pd.DateOffset(months=1)
 
 if __name__ == "__main__": 
-    main()
+     
+     main()

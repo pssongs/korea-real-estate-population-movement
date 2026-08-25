@@ -29,5 +29,9 @@ APT_SALES_COLUMNS = [
     "dealYear",
     "dealMonth",
     "floor",
-    "sggCd"
+    "sggCd",
+    "dealAmount",
+    "excluUseAr",
+    "jibun",
+    "umdNm"
 ]

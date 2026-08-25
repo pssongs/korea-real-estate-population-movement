@@ -5,7 +5,9 @@ INSERT INTO individual_apt_sales (
     floor,
     district_code,
     price_manwon,
-    size_m2
+    size_m2,
+    unit,
+    dong
 ) VALUES (
     :apt_name,
     :build_year,
@@ -13,5 +15,7 @@ INSERT INTO individual_apt_sales (
     :floor,
     :district_code,
     :price_manwon,
-    :size_m2
+    :size_m2,
+    :unit,
+    :dong
 ) 
