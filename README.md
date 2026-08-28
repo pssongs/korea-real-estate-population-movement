@@ -43,12 +43,13 @@ korea-real-estate-population-movement/
 ├── tests/
 ├── requirements.txt
 └── README.md
+└── final_analysis.ipynb
 
 src/        ETL pipeline code
 tests/      pytest tests
 sql/        SQL schema and insert statements
 data/       supporting data such as district codes
-notebook/  experimentation and analysis
+notebook/   experimentation
 ```
 
 ### Technologies Used
@@ -87,6 +88,43 @@ Seoul population flow ETL will extract data on inflow and outflow of residents o
 
 Individual apartment sales ETL likewise extracts data from data.go.kr. The extracted data contains records of apartment transaction records in the observation period. The data is cleaned by removing unwanted fields and renaming columns before being loaded into PostgreSQL.
 
+## Reverse ETL
+
+Transformed monthly real-estate metrics are synchronized from PostgreSQL to Google Sheets.
+
+**Data Flow:**
+```text
+Korean Public Data
+       ↓
+     ETL
+       ↓
+   PostgreSQL
+       ↓
+  SQL Transformation
+       ↓
+Monthly district-level price metrics
+       ↓
+ Reverse ETL
+       ↓
+ Google Sheets
+ ```
+
+* **Grain:** One row per district + month
+* **Business key:** `(district, month)`
+* **Incremental loading:** New records are inserted while existing records are updated only when the value changes.
+* **Idempotent** 
+* **Batching:** New rows and changed rows are sent in batches to reduce Google Sheets API calls.
+* **Data types:** PostgreSQL `Decimal` values are converted to `float` when preparing the Google Sheets API payload.
+
+## Data Modeling & Analysis
+
+* **Grain:** Transaction-level source data → district/month analytical data
+* **Business keys:** Used to identify records across systems and support incremental loading.
+* **OLTP vs OLAP:** Transaction data is detailed and event oriented; aggregated monthly metrics support analytical workloads.
+* **Dimensional modeling:** The project uses a dimensional modeling approach by separating transaction data from district reference information.
+* **Weighted average:** Monthly price/m² is calculated using total transaction value ÷ total transaction area.
+
+
 ## Testing
 ```bash
 python -m pytest 'tests/individual_apt_sales_test.py'
@@ -94,9 +132,6 @@ python -m pytest 'tests/seoul_population_flow_test.py'
 ```
 
 Test covers API success, timeout/retry behavior, response parsing, and data transformation. 
-
-## Analysis
-The collected data will be analyzed to investigate relationships between apartment transactions and population movement across Seoul districts.
 
 ## Future Improvements
 - Automate monthly extraction with GitHub Actions

@@ -3,7 +3,6 @@ from sqlalchemy import text, create_engine
 from config import DB_URL
 import gspread
 from google.oauth2.service_account import Credentials
-from gspread_dataframe import set_with_dataframe
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
