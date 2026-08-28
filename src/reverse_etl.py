@@ -3,6 +3,14 @@ from sqlalchemy import text, create_engine
 from config import DB_URL
 import gspread
 from google.oauth2.service_account import Credentials
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -74,8 +82,12 @@ for _, row in key_existing_rows.iterrows():
             "values": [[float(new_value)]]
         })
 
+        logger.info(f'Added to task: Update for key {key}')
+
 if updates:
+    logger.info('Updating existing rows...')
     worksheet.batch_update(updates)
+    logger.info('Successfully updates existing rows!')
 
 # Batch Inserts
 new_values = new_rows[
@@ -91,7 +103,9 @@ new_values = new_values.values.tolist()
 if new_values:
     start_row = len(existing_data) + 2
 
+    logger.info('Inserting new values...')
     worksheet.update(
         f"A{start_row}:C{start_row + len(new_values) - 1}",
         new_values
     )
+    logger.info('Successfully inserted new values!')
